@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ windows-2022, ubuntu-22.04, macos-12, windows-2019, ubuntu-20.04, macos-11, macos-10.15 ]
+        runner: [ windows-2022, windows-2019, ubuntu-22.04, ubuntu-20.04, macos-12, macos-11, macos-10.15 ]
         generator: [ MSVC, GCC, Clang ]
         CMAKE_BUILD_TYPE: [ Debug, RelWithDebInfo ]
         exclude:
@@ -151,6 +151,16 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
+    - name: "Gather Information"
+      id: info
+      shell: bash
+      run: |
+        if [[ "$(git tag --sort=-v:refname --points-at HEAD)" != "" ]]; then
+          echo "::set-output name=has_tag::true"
+        else
+          echo "::set-output name=has_tag::false"
+        fi
+
     - name: "Dependency: Ninja, Qt, FFmpeg, CURL (Linux)"
       if: startsWith( matrix.runner, 'ubuntu' )
       shell: bash
@@ -212,8 +222,7 @@ jobs:
         key: autodeps-${{ matrix.runner }}-${{ matrix.generator }}-${{ matrix.CMAKE_BUILD_TYPE }}-${{ env.CACHE_VERSION }}
 
     - name: "Code Signing (Windows)"
-# Do not run this on pull requests, ever!
-      if: (github.event_name != 'pull_request') && startsWith( matrix.runner, 'windows' )
+      if: ${{ ( startsWith( matrix.runner, 'windows' ) && ( steps.info.has_tag == 'true' ) && (github.event_name != 'pull_request') ) }}
       id: codesign
       shell: bash
       run: |
@@ -261,22 +270,21 @@ jobs:
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
 
-    - name: "Package: Installer Code Signing (Windows)"
-      if: (github.event_name != 'pull_request') && startsWith( matrix.runner, 'windows' )
+    - name: "Code Signing: Installer (Windows)"
+      if: ${{ ( startsWith( matrix.runner, 'windows' ) && ( steps.info.has_tag == 'true' ) && (github.event_name != 'pull_request') ) }}
       id: codesign_install
       shell: bash
       run: |
         if [[ -f "${{ github.workspace }}/cert.pfx" ]]; then
           signtool=$(awk 'match($0, /^;signtool=(.+)$/, ary) {print ary[1]}' "${{ github.workspace }}/build/temp/installer.iss")
-          echo "::set-output name=iscc_signtool::${signtool}"
+          echo "::set-output name=iscc_signtool::\"/Ssigntool=${signtool} \$p\""
         fi
 
     - name: "Package: Installer (Windows)"
       if: startsWith( matrix.runner, 'windows' )
       shell: cmd
       run: |
-        echo '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 "/Ssigntool=${{ steps.codesign_install.outputs.iscc_signtool }} $p" ".\build\temp\installer.iss"'
-        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 "/Ssigntool=${{ steps.codesign_install.outputs.iscc_signtool }} $p" ".\build\temp\installer.iss"
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ${{ steps.codesign_install.outputs.iscc_signtool }} ".\build\temp\installer.iss"
 
     - name: "Package: Installer (MacOS)"
       if: startsWith( matrix.runner, 'macos' )
