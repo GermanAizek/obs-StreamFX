@@ -206,7 +206,11 @@ message(STATUS "${LOGPREFIX}Version ${VERSION_STRING}")
 ################################################################################
 # Project
 ################################################################################
-set(_VERSION_TWEAK "0${VERSION_TWEAK}")
+if(VERSION_TWEAK STREQUAL "")
+	set(_VERSION_TWEAK "0")
+else()
+	set(_VERSION_TWEAK "${VERSION_TWEAK}")
+endif()
 project(
 	StreamFX
 	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${_VERSION_TWEAK}
