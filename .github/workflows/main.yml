@@ -48,93 +48,91 @@ jobs:
           - runner: macos-10.15
             generator: GCC
         include:
-          - runner: windows-2022
-            generator: MSVC
-            experimental: true
-            platform: "Windows 11"
-            PACKAGE_NAME: "windows-11"
-            CMAKE_SYSTEM_VERSION: "10.0.22000.0"
-            CMAKE_GENERATOR: "Visual Studio 17 2022"
+          - runner: windows-2019
+            platform: "Windows 10"
+            CMAKE_SYSTEM_VERSION: "10.0.19041.0"
+            CMAKE_GENERATOR: "Visual Studio 16 2019"
             CMAKE_GENERATOR_PLATFORM: "x64"
           - runner: windows-2019
             generator: MSVC
             experimental: false
-            platform: "Windows 10"
             PACKAGE_NAME: "windows-10"
-            CMAKE_SYSTEM_VERSION: "10.0.19041.0"
-            CMAKE_GENERATOR: "Visual Studio 16 2019"
-            CMAKE_GENERATOR_PLATFORM: "x64"
-          - runner: windows-2022
-            generator: Clang
-            experimental: true
-            platform: "Windows 11"
-            PACKAGE_NAME: "windows-11-clang"
-            CMAKE_SYSTEM_VERSION: "10.0.22000.0"
-            CMAKE_GENERATOR: "Visual Studio 17 2022"
-            CMAKE_GENERATOR_PLATFORM: "x64"
-            CMAKE_GENERATOR_TOOLSET: "ClangCL"
           - runner: windows-2019
             generator: Clang
             experimental: true
-            platform: "Windows 10"
             PACKAGE_NAME: "windows-10-clang"
-            CMAKE_SYSTEM_VERSION: "10.0.19041.0"
-            CMAKE_GENERATOR: "Visual Studio 16 2019"
-            CMAKE_GENERATOR_PLATFORM: "x64"
             CMAKE_GENERATOR_TOOLSET: "ClangCL"
-          - runner: ubuntu-22.04
-            generator: GCC
+
+          - runner: windows-2022
+            platform: "Windows 11"
+            CMAKE_SYSTEM_VERSION: "10.0.22000.0"
+            CMAKE_GENERATOR: "Visual Studio 17 2022"
+            CMAKE_GENERATOR_PLATFORM: "x64"
+          - runner: windows-2022
+            generator: MSVC
             experimental: false
-            platform: "Ubuntu 22"
-            compiler_c: gcc
-            compiler_cxx: g++
-            PACKAGE_NAME: "ubuntu-22-gcc"
+            PACKAGE_NAME: "windows-11"
+          - runner: windows-2022
+            generator: Clang
+            experimental: true
+            PACKAGE_NAME: "windows-11-clang"
+            CMAKE_GENERATOR_TOOLSET: "ClangCL"
+
+          - runner: ubuntu-20.04
+            platform: "Ubuntu 20"
             CMAKE_GENERATOR: "Ninja"
           - runner: ubuntu-20.04
             generator: GCC
             experimental: false
-            platform: "Ubuntu 20"
             compiler_c: gcc
             compiler_cxx: g++
             PACKAGE_NAME: "ubuntu-20-gcc"
-            CMAKE_GENERATOR: "Ninja"
-          - runner: ubuntu-22.04
-            generator: Clang
-            experimental: false
-            platform: "Ubuntu 22"
-            compiler_c: clang
-            compiler_cxx: clang++
-            PACKAGE_NAME: "ubuntu-22-clang"
-            CMAKE_GENERATOR: "Ninja"
           - runner: ubuntu-20.04
             generator: Clang
             experimental: false
-            platform: "Ubuntu 20"
             compiler_c: clang
             compiler_cxx: clang++
             PACKAGE_NAME: "ubuntu-20-clang"
+
+          - runner: ubuntu-22.04
+            platform: "Ubuntu 22"
             CMAKE_GENERATOR: "Ninja"
-          - runner: macos-12
-            generator: Clang
-            experimental: true
-            platform: "MacOS 12"
-            PACKAGE_NAME: "macos-12"
-            CMAKE_GENERATOR: "Xcode"
-            CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
-          - runner: macos-11
+
+          - runner: ubuntu-22.04
+            generator: GCC
+            experimental: false
+            compiler_c: gcc
+            compiler_cxx: g++
+            PACKAGE_NAME: "ubuntu-22-gcc"
+          - runner: ubuntu-22.04
             generator: Clang
             experimental: false
-            platform: "MacOS 11"
-            PACKAGE_NAME: "macos-11"
+            compiler_c: clang
+            compiler_cxx: clang++
+            PACKAGE_NAME: "ubuntu-22-clang"
+
+          - runner: macos-10.15
             CMAKE_GENERATOR: "Xcode"
             CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
+
           - runner: macos-10.15
             generator: Clang
             experimental: true
             platform: "MacOS 10.15"
             PACKAGE_NAME: "macos-10.15"
-            CMAKE_GENERATOR: "Xcode"
-            CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
+
+          - runner: macos-11
+            generator: Clang
+            experimental: false
+            platform: "MacOS 11"
+            PACKAGE_NAME: "macos-11"
+
+          - runner: macos-12
+            generator: Clang
+            experimental: true
+            platform: "MacOS 12"
+            PACKAGE_NAME: "macos-12"
+
     name: "${{ matrix.platform }} (${{ matrix.generator }}, ${{ matrix.CMAKE_BUILD_TYPE }})"
     runs-on: ${{ matrix.runner }}
     continue-on-error: ${{ matrix.experimental }}
@@ -190,7 +188,7 @@ jobs:
         sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-14 800
         sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-14 800
 
-    - name: 'Dependency: Packages (Linux)'
+    - name: 'Dependency: Packages (MacOS)'
       if: startsWith( matrix.runner, 'macos' )
       shell: bash
       run: |
